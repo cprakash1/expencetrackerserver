@@ -1,36 +1,49 @@
+require('dotenv').config()
+
+
 const express = require("express");
-const dotenv = require("dotenv");
 const colors = require("colors");
 const morgan = require("morgan");
 const transactionrouter = require("./Routes/transaction.js");
 const connectDB = require("./db.js");
 const cors=require("cors");
-// const bodyParser = require("body-parser");
+const User=require('./models/auth')
+const authRouter=require('./Routes/auth.js');
+const { sendSession } = require('./Controller/session.js');
+const sessionRoute=require('./Routes/session');
+
 
 
 const app = express();
-dotenv.config({ path: "./config.env" });
+
+
+
+app.use(express.json()) // for parsing application/json
+app.use(express.urlencoded({ extended: true }))
 connectDB();
 app.use(cors());
 app.use(morgan('dev'));
-// console.log(process.env.MONGO_URI);
-// mongoose.connect(process.env.MONGO_URI, {
-//   useNewUrlParser: true,
-//   useUnifiedTopology: true,
-// //   useCreateIndex: true,
-//   // useFindAndModify: false
-// }).then(()=>{
-//     console.log("Database Connnected".blue.bold);
-// }).catch(err => console.log(err));
+
+
 
 app.use(express.json());
-// app.use(bodyParser.json());
-app.use("/api/v1/transactions", transactionrouter);
-app.get("/", (req, res) => {
-  res.send("Hell");
-});
 
-const port = 3001;
+
+app.use('/',authRouter);
+app.use("/", transactionrouter);
+app.use("/", sessionRoute);
+
+app.post('/getSession', sendSession);
+app.get('*',(req,res)=>{
+  res.status(402).json({
+    success: false,
+  })
+})
+
+
+
+
+const port = 80;
 
 app.listen(port, () => {
   console.log(
